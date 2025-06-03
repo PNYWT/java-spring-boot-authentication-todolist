@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/todolist_udemy_2?useSSL=false&serverTimezone=UTC
+    username: springuser
+    password: 1234
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  profiles:
+    active: dev # หรือ prod ตาม environment ที่ต้องการ
+
+logging:
+  level:
+    root: INFO
+    com.authentication: DEBUG  # ให้ log เฉพาะ package ของคุณตอน dev
+
+server:
+  port: 8081
