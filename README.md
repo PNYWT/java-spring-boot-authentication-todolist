@@ -3,5 +3,5 @@
 
 ### Detail
 - Todolist -> Read, Create, Delete, Update
-- User -> Register, Login
+- User -> Register, Login, Authentication
 - Error Exception -> RequestValidator, TaskNotFoundException, InvalidParameterException
