@@ -20,8 +20,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-        BaseResponseDto<Void> body = new BaseResponseDto<Void>()
-                .setBaseReposeData("401", "Unauthorized access", null);
+        BaseResponseDto<Void> body = new BaseResponseDto<Void>();
+        body.setBaseResponse("401", "Unauthorized access, Please Login");
 
         ObjectMapper mapper = new ObjectMapper();
         response.getWriter().write(mapper.writeValueAsString(body));
