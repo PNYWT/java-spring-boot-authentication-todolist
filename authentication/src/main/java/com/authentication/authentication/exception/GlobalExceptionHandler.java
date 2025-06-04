@@ -1,60 +1,50 @@
 package com.authentication.authentication.exception;
 
 import com.authentication.authentication.dto.BaseResponseDto;
+import com.authentication.authentication.exception.components.InvalidParameterException;
+import com.authentication.authentication.exception.components.TaskNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ดัก validation error
+    @ExceptionHandler(TaskNotFoundException.class)
+    public ResponseEntity<BaseResponseDto<String>> handleTaskNotFound(TaskNotFoundException ex) {
+        BaseResponseDto error = new BaseResponseDto<String>()
+                .setBaseResponse("102", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(InvalidParameterException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidParam(InvalidParameterException ex) {
+        Map<String, Object> error = new LinkedHashMap<>();
+        error.put("ret", "400");
+        error.put("message", "Unexpected parameter: " + ex.getInvalidParam());
+        error.put("suggest", "Did you mean: " + ex.getSuggestedParam() + "?");
+
+        return ResponseEntity.badRequest().body(error);
+    }
+
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidationException(MethodArgumentNotValidException ex) {
+    public Map<String, String> handleValidationException(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error -> {
-            errors.put(error.getField(), error.getDefaultMessage());
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
         });
-
-        BaseResponseDto<Map<String, String>> response = new BaseResponseDto<Map<String, String>>()
-                .setBaseReposeData("102", "Validation Failed", errors);
-        /*
-         FieldError firstError = ex.getBindingResult().getFieldErrors().get(0);
-
-    BaseResponseDto<Void> response = new BaseResponseDto<Void>()
-            .setBaseReposeData("102", firstError.getDefaultMessage(), null);
-         */
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-
-    // ดัก IllegalArgumentException แล้วตอบในรูปแบบ BaseResponseDto
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex) {
-        BaseResponseDto response = new BaseResponseDto<Void>().setBaseResponse("102", ex.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-
-    // Optional: ดัก BadCredentialsException (401)
-    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
-    public ResponseEntity<?> handleBadCredentialsException(org.springframework.security.authentication.BadCredentialsException ex) {
-        BaseResponseDto<Void> response = new BaseResponseDto<Void>()
-                .setBaseReposeData("401", "Please Login.", null);
-
-        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-    }
-
-    // Optional: ดัก RuntimeException ที่ไม่รู้สาเหตุอื่น ๆ
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<?> handleGenericRuntimeException(RuntimeException ex) {
-        BaseResponseDto<Void> response = new BaseResponseDto<Void>()
-                .setBaseReposeData("500", "Unexpected error: " + ex.getMessage(), null);
-
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return errors;
     }
 }
-
